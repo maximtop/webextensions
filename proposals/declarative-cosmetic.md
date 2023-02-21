@@ -42,14 +42,20 @@ Alternatively, the engine could be launched in the background page or service wo
 
 #### How many cosmetic rules are there?
 
-Element hiding rules are one of the most popular rule types - for example, AdGuard's basic filter contains 98500 rules, 24800 of which are element hiding rules.
+Element hiding rules are one of the most popular rule types - for example, AdGuard's Base filter contains 98500 rules, 24800 of which are element hiding rules.
 
 CSS rules and scriptlets are less common. However, they are still very popular among filter developers, especially in some difficult cases.
-Scriptlet rules make up 3000 rules and cosmetic CSS rules make up 1500 rules.
+Scriptlet rules make up 3000 rules and cosmetic CSS rules make up 1500 rules in the AdGuard Base filter.
 
 ## Goal
 
-We need to be able to apply cosmetic rules before the page loads, without having to use content scripts and complicated logic. We also do not want to lose any current features.
+### MV3
+
+One of the goals of MV3 is to make extensions have fewer permissions by default, and to make maximum permissions optional.
+
+### Proposal goal
+
+The goal of this proposal is to make cosmetic rules declarative. This will allow us to remove the `tabs` and `webRequest` permissions from the extension manifest. This will also allow us to remove the `<all_urls>` permission from the extension manifest. Finally, it would allow us not to inject content script into every page.
 
 ## API Proposal
 
