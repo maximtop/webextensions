@@ -6,11 +6,11 @@
 
 Cosmetic rules can be divided into three groups: element hiding rules, CSS rules, and scriptlets.
 
-- Element hiding rules can be used to hide various elements on web pages, such as advertisements, pop-ups, banners, and other unwanted content. By defining the CSS selectors of these elements, users can hide them from view for a more pleasant browsing experience.
+- Element hiding rules can be used to hide various elements on web pages, such as advertisements, pop-ups, banners, and other unwanted content. By defining the CSS selectors of these elements, users can hide them from view for a more pleasant browsing experience. Technically, element hiding rules inject a CSS `display:none` style into the page for a given element.
 
-- CSS rules can be used to add different styles to DOM elements.
+- CSS rules can be used to add different styles to DOM elements. Technically, CSS rules inject a custom CSS style into the page. There are some restrictions on what styles can be injected, e.g. you cannot use a style that loads additional resources. For example, `url()`, etc.
 
-- Scriptlets can be used to modify JS behavior, abort retrieval of some props, speed up timers, abort inline scripts, remove DOM element attributes or classes, etc.
+- Scriptlets can be used to modify JS behavior, abort retrieval of some props, speed up timers, abort inline scripts, remove DOM element attributes or classes, etc. Technically, scriptlets change the behaviour of the page by executing small named JS functions that come with the extension. Example: `abort-property-read(propName)`.
 
 ### How cosmetic rules are applied in MV2 and MV3?
 
