@@ -18,22 +18,27 @@ Cosmetic rules can be divided into three groups: element hiding rules, CSS rules
 
 The extension needs to inject scripts and styles as early as possible for a smoother user experience (e.g. blinking DOM elements). It also needs to patch scripts before websites can copy DOM API methods. This forced the extension to use a rather sophisticated way of injecting scripts and styles based on events thrown by the `webRequest` and `webNavigation` APIs. In short, at `webRequest.onHeadersReceived,` when the first information of the request is received, the extension asks the engine for the rules related to the current request and prepares styles and scripts to inject. As the engine is already running, this information can be obtained very quickly. At `webRequest.onResponseStarted`, the extension tries to inject the scripts received in the previous step using `tabs.executeScript`. This event is not reliable, so at `webNavigation.onCommitted` the extension will inject scripts again if they weren't injected before. Along with the scripts, the extension will also inject CSS styles using `tabs.insertCSS`.
 
-So to inject cosmetic rules we had to ask for the next permissions:
+So to inject cosmetic rules we have to ask for the next permissions:
 * `tabs` - `tabs.insertCSS` to insert styles and `tabs.executeScript` to inject scripts
 * `webRequest` - to listen for events
 * `webNavigation` - to listen for events
 * `<all_urls>` - because we need to inject scripts and styles into all pages
+And these permissions are pretty powerful.
 
 #### MV3
 
-Extensions built on top of MV3 can use the same sophisticated way to inject styles and scripts, but they lack the guarantee that the engine will start. This is because event-driven background pages or service worker pages can, as we know, die. So it takes time for the search engine to start, it injects with some delay, and the user gets a bad experience.
+Extensions built on top of MV3 injects scripts using `scripting` api and content script for styles. To inject scripts extension subscribes to the `webNavigation.onCommitted` event and injects scripts when this event fires. To inject styles extension uses content script. The content script is injected into every page and requests for the styles from the background page via messaging.
 
+So to inject cosmetic rules we have to ask for the next permissions:
 * `scripting` - `scripting.executeScript` to inject scripts and scriptlets
 * `webNavigation` - to listen for events and inject scripts in time
 * `<all_urls>` - because we need to inject scripts and styles into all pages
 * `content_script` - not a permission, but a way to inject styles into the page
 
-#### Why not do inject scripts with content script?
+#### Why not use a content script to inject the cosmetic rules?
+
+In order to insert styles and scripts selectively, we need to launch the engine to search for the rules suitable for this website only. Launching the engine takes some time, if the engine is used in the content script it would be launched for each website separately. This would lead to significant performance degradation due to large script compilation containing a lot of rules.
+Alternatively, the engine could be launched in the background page or service worker, but this would still require time for messaging between the background page and the content script.
 
 #### How many cosmetic rules are there?
 
