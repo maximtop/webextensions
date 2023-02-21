@@ -4,13 +4,13 @@
 
 ### Cosmetic rules in content blockers
 
-Cosmetic rules can be divided into three groups: Hiding Rules, CSS Rules, and Scriptlets.
+Cosmetic rules can be divided into three groups: element hiding rules, CSS rules, and scriptlets.
 
-Hiding rules can be used to hide various elements on web pages, such as advertisements, pop-ups, banners, and other unwanted content. By defining the CSS selectors of these elements, users can hide them from view for a more pleasant browsing experience.
+- Element hiding rules can be used to hide various elements on web pages, such as advertisements, pop-ups, banners, and other unwanted content. By defining the CSS selectors of these elements, users can hide them from view for a more pleasant browsing experience.
 
-CSS rules can be used to add different styles to DOM elements.
+- CSS rules can be used to add different styles to DOM elements.
 
-Scriptlets can be used to modify JS behavior, abort retrieval of some props, speed up timers, abort inline scripts, remove DOM element attributes or classes, etc.
+- Scriptlets can be used to modify JS behavior, abort retrieval of some props, speed up timers, abort inline scripts, remove DOM element attributes or classes, etc.
 
 ### How cosmetic rules are applied in MV2 and MV3?
 
@@ -24,7 +24,7 @@ Extensions built on top of MV3 can use the same sophisticated way to inject styl
 
 #### How many cosmetic rules are there?
 
-Hiding rules are one of the most popular rule types - for example, AdGuard's basic filter contains 98500 rules, 24800 of which are hiding rules.
+Element hiding rules are one of the most popular rule types - for example, AdGuard's basic filter contains 98500 rules, 24800 of which are element hiding rules.
 
 CSS rules and scriptlets are less common. However, they are still very popular among filter developers, especially in some difficult cases.
 Scriptlet rules make up 3000 rules and cosmetic CSS rules make up 1500 rules.
@@ -35,7 +35,7 @@ We need to be able to apply cosmetic rules before the page loads, without having
 
 ## API Proposal
 
-### Declarative hiding rules
+### Declarative element hiding rules
 
 ```ts
 type Rule = {
