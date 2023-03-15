@@ -69,6 +69,9 @@ And as a DNR API we need the ability to dynamically change these rules (https://
 
 ## Several examples of how it can be used
 
+Here you can find some examples of how to use it.
+This section needs to be improved and expanded, but first we want to get feedback on the general idea.
+
 ### Declarative element hiding rules
 
 See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#cosmetic-elemhide-rules
