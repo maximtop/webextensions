@@ -14,7 +14,7 @@ Cosmetic rules can be divided into three groups: element hiding rules, CSS rules
 
 ### Main issues
 
-* Content blocking extensions require wide permissions, mostly to apply cosmetic rules. This is not secure and may scare some people that the extension may be watching them.
+* Content blocking extensions require wide permissions, mostly to apply cosmetic rules
 
 * Timing. Content blocking extensions would like to apply cosmetic rules as quickly as possible, that is, before the page loads and page scripts start executing. With the current approach, there is a slight delay. It would be ideal if the new API applied the rules after merging the CSSDOM and DOM trees built and before the layout step.
 
@@ -67,23 +67,28 @@ To avoid reinventing the wheel, we took the Declarative Net Request API as an ex
 
 And as a DNR API we need the ability to dynamically change these rules (https://github.com/w3c/webextensions/issues/162) - for CSS rules it's doubly important.
 
-## Several examples of how it can be used
+## API
 
-Here you can find some examples of how to use it.
 This section needs to be improved and expanded, but first we want to get feedback on the general idea.
 
-### Declarative element hiding rules
-
-See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#cosmetic-elemhide-rules
-
+### API schema
 ```ts
 /**
- * "hide" - hides the element with the selector
+ * "hide" - hides the element with the selector;
+ * "css" - applies CSS properties to the selector;
+ * "scriptlet" - execute specified scriptlet.
  */
-type RuleActionType = 'hide' | 'allow' | 'css' | 'revert_css' | 'scriptlet';
+type RuleActionType = 'hide' | 'css' | 'scriptlet'; // | ... to extend
 
 type Rule = {
+    /**
+     * What type of action should be applied.
+     */
     action: RuleAction,
+
+    /**
+     * The condition of matching to the hiding rule.
+     */
     condition?: RuleCondition,
 
     /**
@@ -121,7 +126,15 @@ type RuleCondition = {
      */
     excludedDomains?: string[],
 };
+```
 
+### Declarative element hiding rules
+
+Here and below you will find some examples of its use.
+
+See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#cosmetic-elemhide-rules
+
+```ts
 /**
  * Generic hiding rule e.g. - "##selector"
  */
@@ -146,56 +159,6 @@ const genericHidingRuleWithException: Rule = {
         excludedDomains: ['foo.com'],
     },
 };
-
-/**
- * Specific hiding rule e.g. - "foo.com##selector".
- */
-const specificHidingRule: Rule = {
-    action: {
-        type: 'hide',
-        selector: 'selector',
-    },
-    condition: {
-        domains: ['foo.com'], // This rule would apply to foo.com and all its subdomains.
-    },
-};
-
-/**
- * Specific hiding rule with exclusion e.g. - "foo.com,~sub.foo.com##selector".
- */
-const specificHidingRuleWithException: Rule = {
-    action: {
-        type: 'hide',
-        selector: 'selector',
-    },
-    condition: {
-        domains: ['foo.com'], // This rule would apply to foo.com and all its subdomains.
-        excludedDomains: ['sub.foo.com'], // except sub.foo.com
-    },
-};
-
-/**
- * Allowlist exclusion e.g. - "@@||example.com^$elemhide" - disables all cosmetic rules.
- */
-const elemHideRule: Rule = {
-    action: {
-        type: 'allow',
-    },
-    priority: 1,
-    condition: {
-        domains: ['example.com'], // This rule would apply to example.com and all its subdomains
-    },
-};
-
-/**
- * "###banner" - hides '#banner' on all sites.
- */
-const genericHideRule: Rule = {
-    action: {
-        type: 'hide',
-        selector: '#banner',
-    },
-};
 ```
 
 ### Declarative css rules
@@ -211,21 +174,6 @@ See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#cosmetic-c
 const hideElementRule: Rule = {
     action: {
         type: 'css',
-        selector: '.textad',
-    },
-    css: {
-        visibility: 'hidden',
-    }
-};
-
-/**
- * If you want to disable it for example.com, you can create an exception rule:
- * example.com#@$#.textad { visibility: hidden; }
- */
-
-const excludeHideElementRule: Rule = {
-    action: {
-        type: 'revert_css',
         selector: '.textad',
     },
     css: {
