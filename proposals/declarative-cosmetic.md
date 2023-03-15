@@ -12,6 +12,12 @@ Cosmetic rules can be divided into three groups: element hiding rules, CSS rules
 
 - Scriptlets can be used to modify JS behavior, abort retrieval of some props, speed up timers, abort inline scripts, remove DOM element attributes or classes, etc. Technically, scriptlets change the behaviour of the page by executing small named JS functions that come with the extension. Example: `abort-property-read(propName)`.
 
+### Main issues
+
+* Content blocking extensions require wide permissions, mostly to apply cosmetic rules. This is not secure and may scare some people that the extension may be watching them.
+
+* Timing. Content blocking extensions would like to apply cosmetic rules as quickly as possible, that is, before the page loads and page scripts start executing. With the current approach, there is a slight delay. It would be ideal if the new API applied the rules after merging the CSSDOM and DOM trees built and before the layout step.
+
 ### How cosmetic rules are applied in MV2 and MV3?
 
 #### MV2
@@ -57,19 +63,47 @@ One of the goals of MV3 is to make extensions have fewer permissions by default,
 
 The goal of this proposal is to make cosmetic rules declarative. This will allow us to remove the `tabs` and `webRequest` permissions from the extension manifest. This will also allow us to remove the `<all_urls>` permission from the extension manifest. Finally, it would allow us not to inject content script into every page.
 
-## API Proposal
+To avoid reinventing the wheel, we took the Declarative Net Request API as an example, and tried to build logic on its likeness to take advantages of pre-built Declarative CSS rules.
+
+And as a DNR API we need the ability to dynamically change these rules (https://github.com/w3c/webextensions/issues/162) - for CSS rules it's doubly important.
+
+## Several examples of how it can be used
 
 ### Declarative element hiding rules
 
+See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#cosmetic-elemhide-rules
+
 ```ts
+/**
+ * "hide" - hides the element with the selector
+ */
+type RuleActionType = 'hide' | 'allow' | 'css' | 'revert_css' | 'scriptlet';
+
 type Rule = {
     action: RuleAction,
-    condition: RuleCondition,
+    condition?: RuleCondition,
+
+    /**
+     * A list of CSS rules to apply to the element.
+     *
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration}
+     */
+    css?: CSSStyleDeclaration
+
+    /**
+     * Information about the scriptlet to execute the JS rule
+     */
+    scriptlet?: ScriptletInfo
 };
 
 type RuleAction = {
     type: RuleActionType,
-    selector: string,
+    selector?: string,
+};
+
+type ScriptletInfo = {
+    name: string,
+    args: string[],
 };
 
 type RuleCondition = {
@@ -84,11 +118,6 @@ type RuleCondition = {
      */
     excludedDomains?: string[],
 };
-
-/**
- * "hide" - hides the element with the selector
- */
-type RuleActionType = 'hide';
 
 /**
  * Generic hiding rule e.g. - "##selector"
@@ -141,15 +170,87 @@ const specificHidingRuleWithException: Rule = {
         excludedDomains: ['sub.foo.com'], // except sub.foo.com
     },
 };
+
+/**
+ * Allowlist exclusion e.g. - "@@||example.com^$elemhide" - disables all cosmetic rules.
+ */
+const elemHideRule: Rule = {
+    action: {
+        type: 'allow',
+    },
+    priority: 1,
+    condition: {
+        domains: ['example.com'], // This rule would apply to example.com and all its subdomains
+    },
+};
+
+/**
+ * "###banner" - hides '#banner' on all sites.
+ */
+const genericHideRule: Rule = {
+    action: {
+        type: 'hide',
+        selector: '#banner',
+    },
+};
 ```
 
-// TODO add examples with allowlist rules
-
 ### Declarative css rules
-// TODO
+
+See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#cosmetic-css-rules
+
+```ts
+/**
+ * #$#.textad { visibility: hidden; } - hides '.textad' on all sites via CSS,
+ * but not removing from the DOM.
+ */
+
+const hideElementRule: Rule = {
+    action: {
+        type: 'css',
+        selector: '.textad',
+    },
+    css: {
+        visibility: 'hidden',
+    }
+};
+
+/**
+ * If you want to disable it for example.com, you can create an exception rule:
+ * example.com#@$#.textad { visibility: hidden; }
+ */
+
+const excludeHideElementRule: Rule = {
+    action: {
+        type: 'revert_css',
+        selector: '.textad',
+    },
+    css: {
+        visibility: 'hidden',
+    }
+};
+
+```
 
 ### Declarative scriptlets rules
-// TODO
+
+See - https://adguard.com/kb/general/ad-filtering/create-own-filters/#scriptlets
+
+```ts
+/**
+ * example.org#%#//scriptlet("abort-on-property-read", "alert") - do not allow usage of window.alert on the example.org site.
+ */
+
+const hideElementRule: Rule = {
+    action: {
+        type: 'scriptlet',
+    },
+    scriptlet: {
+        name: 'abort-on-property-read',
+        args: ['alert']
+    }
+};
+```
 
 ### API to manage rules dynamically
 // TODO
